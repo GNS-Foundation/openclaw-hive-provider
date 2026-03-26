@@ -1,0 +1,32 @@
+{
+  "name": "@geiant/openclaw-hive-provider",
+  "version": "0.1.0",
+  "description": "GEIANT Hive provider for OpenClaw — distributed local AI inference, zero cloud dependency",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "keywords": [
+    "openclaw",
+    "openclaw-provider",
+    "hive",
+    "geiant",
+    "distributed-inference",
+    "local-llm",
+    "on-premise",
+    "gdpr",
+    "data-sovereignty",
+    "gns-protocol",
+    "stellar",
+    "edge-ai"
+  ],
+  "author": "Camilo Ayerbe <cayerbe@ulissy.app>",
+  "license": "MIT",
+  "homepage": "https://hive.geiant.com",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GNS-Foundation/openclaw-hive-provider"
+  }
+}

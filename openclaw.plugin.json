@@ -1,0 +1,53 @@
+{
+  "id": "geiant-hive",
+  "providers": ["geiant-hive"],
+  "providerAuthEnvVars": {
+    "geiant-hive": ["HIVE_API_KEY"]
+  },
+  "providerAuthChoices": [
+    {
+      "provider": "geiant-hive",
+      "method": "api-key",
+      "choiceId": "hive-api-key",
+      "choiceLabel": "GEIANT Hive API key",
+      "groupId": "geiant-hive",
+      "groupLabel": "GEIANT Hive",
+      "groupHint": "Distributed local inference — zero cloud, zero data leakage",
+      "optionKey": "hiveApiKey",
+      "cliFlag": "--hive-api-key",
+      "cliOption": "--hive-api-key <key>",
+      "cliDescription": "GEIANT Hive API key (from hive.geiant.com/keys)"
+    },
+    {
+      "provider": "geiant-hive",
+      "method": "local",
+      "choiceId": "hive-local",
+      "choiceLabel": "Hive Local Gateway (no API key needed)",
+      "groupId": "geiant-hive",
+      "groupLabel": "GEIANT Hive (Local)",
+      "groupHint": "Connect to your local Hive swarm",
+      "optionKey": "hiveLocalUrl",
+      "cliFlag": "--hive-url",
+      "cliOption": "--hive-url <url>",
+      "cliDescription": "Local Hive gateway URL (default: http://localhost:8080)"
+    }
+  ],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "hiveUrl": {
+        "type": "string",
+        "description": "Hive gateway URL. Default: https://hive.geiant.com for cloud, http://localhost:8080 for local."
+      },
+      "hiveJurisdiction": {
+        "type": "string",
+        "description": "H3 cell for jurisdiction binding (e.g., 8a1f9e22d2c7fff for Rome)"
+      },
+      "hiveGnsIdentity": {
+        "type": "string",
+        "description": "GNS public key (Ed25519 hex) to bind agent to an identity"
+      }
+    }
+  }
+}

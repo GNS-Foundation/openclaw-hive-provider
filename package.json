@@ -1,32 +1,61 @@
 {
-  "name": "@geiant/openclaw-hive-provider",
-  "version": "0.1.0",
-  "description": "GEIANT Hive provider for OpenClaw — distributed local AI inference, zero cloud dependency",
+  "name": "@gns-foundation/openclaw-hive-provider",
+  "version": "0.1.0-alpha.1",
+  "description": "GEIANT Hive provider for OpenClaw — cryptographically-signed distributed local AI inference with EU AI Act compliant agent identity",
   "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE",
+    "openclaw.plugin.json"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "test": "echo 'no tests yet — Phase 2'"
+  },
   "openclaw": {
-    "extensions": [
-      "./index.ts"
-    ]
+    "extensions": ["./dist/index.js"]
+  },
+  "dependencies": {
+    "tweetnacl": "^1.0.3",
+    "tweetnacl-util": "^0.15.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.0",
+    "typescript": "^5.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "keywords": [
     "openclaw",
     "openclaw-provider",
     "hive",
     "geiant",
+    "gns-protocol",
     "distributed-inference",
     "local-llm",
     "on-premise",
     "gdpr",
     "data-sovereignty",
-    "gns-protocol",
+    "eu-ai-act",
+    "agent-identity",
+    "ed25519",
     "stellar",
-    "edge-ai"
+    "edge-ai",
+    "liquid-ai"
   ],
-  "author": "Camilo Ayerbe <cayerbe@ulissy.app>",
-  "license": "MIT",
-  "homepage": "https://hive.geiant.com",
+  "author": "GNS Foundation <cayerbe@ulissy.app>",
+  "license": "Apache-2.0",
+  "homepage": "https://docs.geiant.com/hive",
   "repository": {
     "type": "git",
     "url": "https://github.com/GNS-Foundation/openclaw-hive-provider"
+  },
+  "bugs": {
+    "url": "https://github.com/GNS-Foundation/openclaw-hive-provider/issues"
   }
 }

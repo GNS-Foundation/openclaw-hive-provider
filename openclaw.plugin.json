@@ -2,34 +2,21 @@
   "id": "geiant-hive",
   "providers": ["geiant-hive"],
   "providerAuthEnvVars": {
-    "geiant-hive": ["HIVE_API_KEY"]
+    "geiant-hive": ["GEIANT_AGENT_IDENTITY_PATH", "HIVE_URL"]
   },
   "providerAuthChoices": [
     {
       "provider": "geiant-hive",
-      "method": "api-key",
-      "choiceId": "hive-api-key",
-      "choiceLabel": "GEIANT Hive API key",
+      "method": "gns-identity",
+      "choiceId": "hive-gns-identity",
+      "choiceLabel": "GEIANT Hive with GNS agent identity",
       "groupId": "geiant-hive",
       "groupLabel": "GEIANT Hive",
-      "groupHint": "Distributed local inference — zero cloud, zero data leakage",
-      "optionKey": "hiveApiKey",
-      "cliFlag": "--hive-api-key",
-      "cliOption": "--hive-api-key <key>",
-      "cliDescription": "GEIANT Hive API key (from hive.geiant.com/keys)"
-    },
-    {
-      "provider": "geiant-hive",
-      "method": "local",
-      "choiceId": "hive-local",
-      "choiceLabel": "Hive Local Gateway (no API key needed)",
-      "groupId": "geiant-hive",
-      "groupLabel": "GEIANT Hive (Local)",
-      "groupHint": "Connect to your local Hive swarm",
-      "optionKey": "hiveLocalUrl",
-      "cliFlag": "--hive-url",
-      "cliOption": "--hive-url <url>",
-      "cliDescription": "Local Hive gateway URL (default: http://localhost:8080)"
+      "groupHint": "Cryptographically-signed local AI inference (EU AI Act compliant)",
+      "optionKey": "hiveIdentityPath",
+      "cliFlag": "--hive-identity-path",
+      "cliOption": "--hive-identity-path <path>",
+      "cliDescription": "Path to GNS agent identity (default: ~/.config/geiant-hive/identity.json; auto-generated on first run)"
     }
   ],
   "configSchema": {
@@ -38,15 +25,20 @@
     "properties": {
       "hiveUrl": {
         "type": "string",
-        "description": "Hive gateway URL. Default: https://hive.geiant.com for cloud, http://localhost:8080 for local."
+        "description": "Hive gateway URL. Default: https://hive.geiant.com/v1 (OpenAI-compatible)"
       },
       "hiveJurisdiction": {
         "type": "string",
-        "description": "H3 cell for jurisdiction binding (e.g., 8a1f9e22d2c7fff for Rome)"
+        "description": "H3 cell for jurisdiction binding (e.g., 861e8050fffffff for Rome). Default: auto-detected from IP/timezone."
       },
-      "hiveGnsIdentity": {
+      "hiveIdentityPath": {
         "type": "string",
-        "description": "GNS public key (Ed25519 hex) to bind agent to an identity"
+        "description": "Path to the agent's Ed25519 identity file. Default: ~/.config/geiant-hive/identity.json. Auto-generated on first run."
+      },
+      "hiveMinTrustTier": {
+        "type": "string",
+        "enum": ["seedling", "explorer", "navigator", "trailblazer", "sovereign"],
+        "description": "Minimum worker trust tier for inference routing. Default: seedling (accept all workers)."
       }
     }
   }

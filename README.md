@@ -1,151 +1,115 @@
 # 🐝 GEIANT Hive Provider for OpenClaw
 
-**Run OpenClaw on your own hardware. Zero cloud. Zero API costs. Your data never leaves your building.**
+**Cryptographically-signed local AI inference. Zero cloud. Zero data leakage. EU AI Act ready.**
 
-GEIANT Hive turns idle desktops, laptops, and phones into a distributed AI inference cluster. This provider plugin replaces cloud LLM APIs (Anthropic, OpenAI) with local Hive inference — same quality, zero data leakage.
+This plugin gives OpenClaw two things at once:
+
+1. **Distributed local inference** — replaces cloud LLM APIs (Anthropic, OpenAI) with the GEIANT Hive swarm. Inference runs on devices you control; data never leaves your network.
+
+2. **Cryptographic agent identity** — every OpenClaw decision, tool call, and inference becomes a signed breadcrumb in the GNS Protocol audit chain. Verifiable. Jurisdictional. EU AI Act Article 12 compliant by architecture.
+
+Status: **Sprint 2 alpha** — initial scaffolding shipped, identity layer and signing in progress. See [Roadmap](#roadmap).
 
 ## Why?
 
-| | Cloud APIs (Anthropic/OpenAI) | GEIANT Hive |
+|  | Cloud APIs (Anthropic / OpenAI) | GEIANT Hive |
 |---|---|---|
-| **Data** | Sent to US/EU cloud servers | Never leaves your network |
-| **Cost** | $0.002–0.06 per token | Zero (your hardware) |
+| **Data residency** | Sent to US/EU cloud servers | Never leaves your network |
+| **Cost** | $0.002 – $0.06 per token | Zero per-token (your hardware) |
+| **Audit trail** | Trust the provider | Cryptographically verifiable |
+| **Agent identity** | None | Ed25519 keypair, signed actions |
+| **Jurisdiction proof** | None | H3 cell bound, EU AI Act ready |
 | **500 users** | $10–30K/month | €990/month flat |
-| **Compliance** | None | Cryptographic jurisdiction proof |
-| **Offline** | No | Yes — fully local |
+| **Offline** | No | Yes |
 
-## Quick Setup
+## Architecture
 
-### Option 1: Local Hive Swarm (recommended)
+The plugin owns a GNS identity. Every request flows through it:
 
-Your OpenClaw agent runs inference on devices you control.
+```
+OpenClaw process starts
+  ↓
+@gns-foundation/openclaw-hive-provider loads
+  ↓
+Plugin reads or generates Ed25519 keypair
+  (at $GEIANT_AGENT_IDENTITY_PATH, default
+   ~/.config/geiant-hive/identity.json)
+  ↓
+Plugin registers identity with the swarm
+  ↓
+[OpenClaw normal operation]
+  ↓
+When OpenClaw calls the LLM provider:
+  Plugin signs request with the agent's Ed25519 key
+  POSTs to https://hive.geiant.com/v1/chat/completions
+  with X-GNS-PublicKey, X-GNS-Timestamp, X-GNS-Signature
+  ↓
+Backend verifies signature → routes to swarm → returns response
+  Audit trail: every chat completion is cryptographically tied
+  to the agent's GNS identity, queryable forever.
+```
+
+This is what makes GEIANT a credible LangChain / CrewAI / AutoGen alternative for regulated and sovereign workloads: not by winning on ecosystem (we won't), but by covering the same functional ground with structurally better properties — verifiable audit, jurisdictional routing, cryptographic accountability.
+
+## Roadmap
+
+This repo is the Sprint 2 work item from the [GEIANT Hive Roadmap §12.3](https://docs.geiant.com/hive/roadmap#123-near-term-q3-2026--agent-orchestration). Progress:
+
+- ✅ **Phase 0** — repo scaffolding (this commit)
+- ⏳ **Phase 1** — backend identity layer (in `gns-backend` repo)
+  - Migration 008: `agents` table
+  - `POST /v1/agents/register` endpoint
+  - `signed_request.ts` middleware extension to recognize agent identities
+- ⏳ **Phase 2** — plugin implementation (this repo)
+  - Identity bootstrap (`src/identity.ts`) — load or generate Ed25519 keypair
+  - Signing module (`src/sign.ts`) — using tweetnacl, matches the worker's pattern
+  - Registration flow (`src/register.ts`) — first-run, POSTs to `/v1/agents/register`
+  - Request interceptor — every outbound `/v1/chat/completions` gets signed
+- ⏳ **Phase 3** — demo artifact + publish
+  - npm publish `0.1.0-alpha.1`
+  - README screenshots
+  - Live OpenClaw session with visible audit trail at hive.geiant.com/audit
+
+## Quick Setup (will work after Phase 2 ships)
 
 ```bash
-# 1. Start the Hive gateway on your network
-cd ~/geiant-hive/packages/hive-gateway
-node hive-gateway.js --model llama-8b --port 8080
+# Install
+npm install @gns-foundation/openclaw-hive-provider
 
-# 2. Install the Hive provider in OpenClaw
-cp -r openclaw-hive-provider ~/openclaw/extensions/geiant-hive
+# Configure OpenClaw to use Hive
+openclaw onboard --provider geiant-hive --hive-url https://hive.geiant.com/v1
 
-# 3. Configure OpenClaw to use Hive
-openclaw onboard --provider geiant-hive --hive-url http://localhost:8080
+# First run: plugin generates a GNS keypair and registers as an agent.
+# Subsequent runs: signs every inference call with the agent's identity.
 ```
 
-### Option 2: Hive Cloud Gateway
+## Available Models (in production today)
 
-Use the managed Hive endpoint (devices still run locally at subscriber organizations).
+| Model ref | Provider | Parameters | Best for |
+|---|---|---|---|
+| `geiant-hive/lfm2.5-1.2b-instruct` | Liquid AI | 1.2B | Default — fast, capable, edge-optimized |
+| `geiant-hive/lfm2.5-1.2b-thinking` | Liquid AI | 1.2B | Multi-step reasoning, slower per token |
+| `geiant-hive/phi-3-mini` | Microsoft | 3.8B | Strong general-purpose |
+| `geiant-hive/tinyllama` | TinyLlama Project | 1.1B | Smoke tests, low-resource fallback |
 
-```bash
-# 1. Get your API key at hive.geiant.com/keys
-# 2. Install and configure
-openclaw onboard --provider geiant-hive --hive-api-key hive_pk_live_xxxxx
-```
+More models planned for v0.7+ (Llama 3.1 8B, Mistral 7B, larger Liquid AI models).
 
-### Option 3: Just set the environment variable
+## Why "Liquid AI" prominently?
 
-```bash
-export HIVE_API_KEY=hive_pk_live_xxxxx
-# or for local:
-export HIVE_URL=http://localhost:8080
-```
+We run [Liquid AI's LFM2.5 family](https://www.liquid.ai/) as the default Hive model. LFM2.5 is a frontier-quality small model with state-space architecture, well-suited for edge deployment on a decentralized swarm. Crediting upstream is good citizenship and good signal.
 
-## Available Models
+## Configuration
 
-| Model | Parameters | RAM needed | Min devices | Best for |
-|---|---|---|---|---|
-| `geiant-hive/phi-3-mini` | 3.8B | 2.2 GB | 1 | Quick tasks, low-end hardware |
-| `geiant-hive/llama-8b` | 8B | 4.6 GB | 2 | General purpose (default) |
-| `geiant-hive/mistral-7b` | 7B | 4 GB | 2 | Efficient reasoning |
-| `geiant-hive/llama-70b` | 70B | 35 GB | 20 | GPT-4 class quality |
-| `geiant-hive/qwen-72b` | 72B | 36 GB | 20 | Frontier multilingual |
-
-## How It Works
-
-```
-Your message (Telegram/WhatsApp/GCRUMBS)
-  │
-  ▼
-OpenClaw Gateway
-  │
-  ▼
-GEIANT Hive Provider (this plugin)
-  │
-  ▼
-Hive API Gateway (hive.geiant.com/v1 or localhost:8080/v1)
-  │
-  ├─ Discovers devices from swarm registry (Supabase)
-  ├─ Computes optimal layer assignments
-  ├─ Launches llama-server with --rpc
-  │
-  ▼
-Distributed inference across your devices
-  │
-  ├── MacBook Pro M4 (layers 0–19, Metal GPU)
-  ├── MacBook Air M1 (layers 20–31, CPU/Metal)
-  ├── Office Desktop #1 (layers ...)
-  └── ... up to 100+ devices
-  │
-  ▼
-Response streams back to your chat
-```
-
-No token ever leaves your network. Every inference is cryptographically logged as a compute breadcrumb on the GNS Protocol.
-
-## Architecture Advantages
-
-### 🔐 Privacy by Architecture
-Cloud APIs promise privacy through policy. Hive guarantees it through architecture — inference runs on devices **you** physically control. There is no server to subpoena because there is no server.
-
-### 🏛️ EU AI Act Ready
-Every inference session produces a compliance report: which devices participated, in which H3 jurisdiction cell, with what delegation certificates. August 2, 2026 deadline — Hive is ready.
-
-### 💰 GNS Token Economy
-Devices earn GNS tokens for compute contributions. Settlement: 40% platform, 35% community (device operators), 15% hydration (model distribution), 5% sovereign (coordinators). Settled on Stellar blockchain in one atomic transaction.
-
-### 🆔 GNS Identity
-Your OpenClaw agent can be bound to a GNS identity (Ed25519 keypair). This gives it:
-- A `@handle` (like @myclaw-agent)
-- Proof-of-Trajectory (every action is a breadcrumb)
-- Delegation certificates (CTO delegates to department agents)
-- Stellar wallet (agent can make/receive payments)
-
-## Performance
-
-Real benchmarks from March 25, 2026:
-
-| Config | Prompt (tok/s) | Generation (tok/s) |
+| Setting | Env var | Default |
 |---|---|---|
-| M4 Pro single (Phi-3) | 382 | 34.1 |
-| M4 + M1 WiFi (Phi-3) | 55.6 | 13.1 |
-| M4 Pro single (Llama-8B) | 222 | 20.3 |
-| 30 desktops sim (Llama-8B) | — | 272.7 |
-| 50 GPUs sim (Llama-70B) | — | 238.8 |
-
-30 office desktops running Llama-8B achieve **6.8× the throughput of a single NVIDIA A100**.
-
-## GCRUMBS Channel
-
-For maximum privacy, use GCRUMBS as your OpenClaw messaging channel instead of Telegram/WhatsApp:
-- End-to-end encrypted with Ed25519
-- Every message is a breadcrumb (Proof-of-Trajectory)
-- Agent responses are signed and jurisdiction-bound
-- Zero third-party servers see your commands
-
-Download GCRUMBS: [App Store](#) | [Google Play](#)
-
-## Links
-
-- **Dashboard**: [hive.geiant.com](https://hive.geiant.com)
-- **API Docs**: [hive.geiant.com/docs](https://hive.geiant.com/docs)
-- **GNS Protocol**: [gcrumbs.com](https://gcrumbs.com)
-- **GEIANT**: [geiant.com](https://geiant.com)
-- **Stellar Settlement**: [TX on StellarExpert](https://stellar.expert/explorer/public/tx/34b02ac18a923bcf050e4177b8c5accc87abbb0674ba6cc3a6b4b6807dff56dd)
-- **Patent**: USPTO #63/948,788
+| Identity file path | `GEIANT_AGENT_IDENTITY_PATH` | `~/.config/geiant-hive/identity.json` |
+| Hive gateway URL | `HIVE_URL` | `https://hive.geiant.com/v1` |
+| Jurisdiction (H3 cell) | (auto-detected) | from IP / timezone |
+| Min worker trust tier | (per-call header) | `seedling` (accept all) |
 
 ## License
 
-MIT — same as OpenClaw.
+Apache-2.0. Same permissive license as the rest of the `@gns-foundation` ecosystem and OpenClaw itself.
 
 ---
 

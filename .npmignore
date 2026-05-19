@@ -1,0 +1,16 @@
+# Source files — we ship dist/ only
+src/
+tsconfig.json
+
+# Backups, dev files
+*.bak
+.gitignore
+.npmignore
+.github/
+.vscode/
+
+# Test / coverage
+coverage/
+*.lcov
+*.test.ts
+*.test.js

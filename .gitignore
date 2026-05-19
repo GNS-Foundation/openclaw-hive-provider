@@ -29,3 +29,9 @@ Thumbs.db
 # Test outputs
 coverage/
 *.lcov
+
+# Scripts directory build artifacts (smoke test runs via tsx, not tsc)
+scripts/*.js
+scripts/*.js.map
+scripts/*.d.ts
+scripts/*.d.ts.map

@@ -14,18 +14,23 @@
   "scripts": {
     "build": "tsc",
     "prepublishOnly": "npm run build",
-    "test": "echo 'no tests yet — Phase 2'"
+    "test": "echo 'no tests yet — Phase 2'",
+    "smoke": "npm run build && npx tsx scripts/smoke-test.ts"
   },
   "openclaw": {
-    "extensions": ["./dist/index.js"]
+    "extensions": [
+      "./dist/index.js"
+    ]
   },
   "dependencies": {
+    "@gns-aip/sdk": "^0.1.1",
     "tweetnacl": "^1.0.3",
     "tweetnacl-util": "^0.15.1"
   },
   "devDependencies": {
     "@types/node": "^20.12.0",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "tsx": "^4.19.0"
   },
   "engines": {
     "node": ">=18.0.0"
